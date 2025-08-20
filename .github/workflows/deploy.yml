@@ -6,6 +6,7 @@ on:
       - main
   workflow_dispatch:
 
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -42,12 +43,17 @@ jobs:
         run: |
           aws lambda update-function-code \
             --function-name pixelator \
-            --zip-file fileb://lambda.zip
-            - name: Wait for Lambda update
-              run: aws lambda wait function-updated --function-name pixelator
+            --zip-file fileb://lambda.zip \
+            --region us-east-1
 
       - name: Update Lambda environment variable for processed bucket
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: us-east-1
         run: |
           aws lambda update-function-configuration \
             --function-name pixelator \
+            --region us-east-1 \
             --environment "Variables={PROCESSED_BUCKET=pixelator-35010-processed}"
+

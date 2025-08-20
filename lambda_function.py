@@ -6,7 +6,7 @@ import boto3
 from PIL import Image
 
 # bucketname for pixelated images
-processed_bucket=os.environ['processed_bucket']
+processed_bucket = os.environ['processed_bucket']
 
 s3_client = boto3.client('s3')
 

@@ -36,6 +36,9 @@ jobs:
             --function-name pixelator \
             --zip-file fileb://lambda.zip
 
+      - name: Wait for Lambda update
+        run: aws lambda wait function-updated --function-name pixelator
+
       - name: Update Lambda environment variable for processed bucket
         run: |
           aws lambda update-function-configuration \

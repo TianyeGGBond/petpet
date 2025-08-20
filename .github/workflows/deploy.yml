@@ -62,4 +62,4 @@ jobs:
           aws lambda update-function-configuration \
             --function-name pixelator \
             --region us-east-1 \
-            --environment "Variables={processed_bucket=pixelator-35010-processed}"
+            --environment "Variables={processed_bucket=pixelator-35010-prrocessed}"

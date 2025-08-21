@@ -5,10 +5,24 @@ import boto3
 
 from PIL import Image
 
-# bucketname for pixelated images
-processed_bucket = os.environ['processed_bucket']
+processed_bucket = os.getenv('processed_bucket')
+if not processed_bucket:
+    raise RuntimeError("Missing env var: processed_bucket / PROCESSED_BUCKET")
+
+ddb_table_name = os.getenv('ddb_table_name', 'UserEmails')
+step_fn_arn = os.getenv('step_fn_arn')
+if not step_fn_arn:
+    raise RuntimeError("Missing env var: step_fn_arn")
 
 s3_client = boto3.client('s3')
+sf_client = boto3.client('stepfunctions')
+dynamodb = boto3.resource('dynamodb')
+email_table = dynamodb.Table(ddb_table_name)
+
+def get_user_emails():
+    resp = email_table.scan()
+    return [item["email"] for item in resp.get("Items", [])]
+
 
 def lambda_handler(event, context):
 	print(event)
@@ -39,7 +53,18 @@ def lambda_handler(event, context):
 	s3_client.upload_file('/tmp/pixelated-32x32-{}'.format(object_key), processed_bucket,'pixelated-32x32-{}'.format(key))
 	s3_client.upload_file('/tmp/pixelated-48x48-{}'.format(object_key), processed_bucket,'pixelated-48x48-{}'.format(key))
 	s3_client.upload_file('/tmp/pixelated-64x64-{}'.format(object_key), processed_bucket,'pixelated-64x64-{}'.format(key))
-	
+
+	emails = get_user_emails()
+	print("Recipients:", emails)
+
+	message = f"Your image {key} has been processed successfully!"
+	for email in emails:
+		payload = {"email": email, "message": message, "waitSeconds": 0}
+		sf_client.start_execution(stateMachineArn=step_fn_arn, input=json.dumps(payload))
+		print(f"StepFunctions started for {email}")
+
+	return {"statusCode": 200, "body": json.dumps({"status": "ok"})}
+
 def pixelate(pixelsize, image_path, pixelated_img_path):
 	img = Image.open(image_path)
 	temp_img = img.resize(pixelsize, Image.BILINEAR)

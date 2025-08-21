@@ -53,7 +53,7 @@ jobs:
         run: |
           aws lambda wait function-updated --function-name pixelator --region us-east-1
 
-      - name: Update Lambda environment variable for processed bucket
+      - name: Update Lambda environment variables
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -62,4 +62,6 @@ jobs:
           aws lambda update-function-configuration \
             --function-name pixelator \
             --region us-east-1 \
-            --environment "Variables={processed_bucket=pixelator-35010-prrocessed}"
+            --environment "Variables={processed_bucket=pixelator-35010-prrocessed,
+              ddb_table_name=UserEmails,
+              step_fn_arn=arn:aws:states:us-east-1:150339951998:stateMachine:PetCuddleOTron}"
